@@ -29,10 +29,16 @@ app.get('/posts', async (req, res) => {
 });
 
 app.post('/posts', async (req, res) => {
-  const { titulo, img, descripcion, likes = 0 } = req.body;
+  const { titulo, img, descripcion, likes = 0 } = req.body ?? {};
 
-  if (!titulo || !img || !descripcion) {
+  if ([titulo, img, descripcion].some((campo) => typeof campo !== 'string' || !campo.trim())) {
     return res.status(400).json({ error: 'Faltan campos: titulo, img y descripcion son obligatorios' });
+  }
+  if (titulo.length > 25 || img.length > 1000 || descripcion.length > 255) {
+    return res.status(400).json({ error: 'Máximo 25 caracteres para titulo, 1000 para img y 255 para descripcion' });
+  }
+  if (!Number.isInteger(likes) || likes < 0) {
+    return res.status(400).json({ error: 'likes debe ser un número entero' });
   }
 
   try {
@@ -48,6 +54,8 @@ app.post('/posts', async (req, res) => {
 // Usada por el botón de like del frontend
 app.put('/posts/:id', async (req, res) => {
   const { id } = req.params;
+  if (!/^\d+$/.test(id)) return res.status(400).json({ error: 'id inválido' });
+
   try {
     const { rows } = await pool.query(
       'UPDATE posts SET likes = COALESCE(likes, 0) + 1 WHERE id = $1 RETURNING *',
@@ -59,6 +67,10 @@ app.put('/posts/:id', async (req, res) => {
     console.error(error.message);
     res.status(500).json({ error: 'No se pudo actualizar el post' });
   }
+});
+
+app.use((error, req, res, next) => {
+  res.status(error.status || 500).json({ error: 'Solicitud inválida' });
 });
 
 app.listen(PORT, () => {

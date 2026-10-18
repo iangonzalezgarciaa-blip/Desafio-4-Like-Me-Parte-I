@@ -20,17 +20,20 @@ function Form({ onAddPost }) {
       <input
         type="text"
         placeholder="Título"
+        maxLength={25}
         value={titulo}
         onChange={(e) => setTitulo(e.target.value)}
       />
       <input
         type="text"
         placeholder="URL de la imagen"
+        maxLength={1000}
         value={img}
         onChange={(e) => setImg(e.target.value)}
       />
       <textarea
         placeholder="Descripción"
+        maxLength={255}
         value={descripcion}
         onChange={(e) => setDescripcion(e.target.value)}
       />
